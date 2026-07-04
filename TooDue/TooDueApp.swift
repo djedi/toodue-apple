@@ -30,8 +30,6 @@ struct RootView: View {
         switch app.phase {
         case .loading:
             ProgressView()
-        case .needsServer:
-            ServerSetupView()
         case .needsAuth:
             AuthView()
         case .ready:

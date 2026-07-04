@@ -10,7 +10,6 @@ import Observation
 final class AppState {
     enum Phase: Equatable {
         case loading
-        case needsServer
         case needsAuth
         case ready
     }
@@ -26,8 +25,13 @@ final class AppState {
     private(set) var isSyncing = false
     var syncError: String?
 
+    /// The active server — the hosted service unless a self-hosted override is stored.
     var serverURLString: String {
-        UserDefaults.standard.string(forKey: Self.serverURLKey) ?? ""
+        UserDefaults.standard.string(forKey: Self.serverURLKey) ?? ServerConfig.defaultURLString
+    }
+
+    var isCustomServer: Bool {
+        UserDefaults.standard.string(forKey: Self.serverURLKey) != nil
     }
 
     var pendingCount: Int { queue.count }
@@ -52,12 +56,9 @@ final class AppState {
         queue = snapshot.queue
         nextTempID = snapshot.nextTempID
 
-        if let url = Self.storedServerURL() {
-            api = APIClient(baseURL: url)
-            phase = user != nil ? .ready : .needsAuth
-        } else {
-            phase = .needsServer
-        }
+        let url = Self.storedServerURL() ?? URL(string: ServerConfig.defaultURLString)!
+        api = APIClient(baseURL: url)
+        phase = user != nil ? .ready : .needsAuth
         startPathMonitor()
         if phase == .ready {
             Task { await self.resync() }
@@ -71,23 +72,27 @@ final class AppState {
 
     // MARK: Server selection
 
-    /// Validate, normalize, and store the self-hosted server URL.
+    /// Validate, normalize, and store the server URL. Entering the official
+    /// server removes the self-hosted override. Switching servers while
+    /// signed in discards the (server-specific) session, cache, and queue.
     func setServer(_ raw: String) throws {
-        var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !s.isEmpty else { throw APIError.network("Enter your server address") }
-        if !s.contains("://") { s = "https://" + s }
-        while s.hasSuffix("/") { s = String(s.dropLast()) }
-        guard let url = URL(string: s), let scheme = url.scheme,
-              ["http", "https"].contains(scheme), url.host() != nil
-        else { throw APIError.network("That doesn't look like a valid URL") }
-        UserDefaults.standard.set(s, forKey: Self.serverURLKey)
-        api = APIClient(baseURL: url)
-        phase = .needsAuth
-    }
-
-    func changeServer() {
+        let url = try ServerConfig.normalize(raw)
+        guard url.absoluteString != serverURLString else { return }
+        if url.absoluteString == ServerConfig.defaultURLString {
+            UserDefaults.standard.removeObject(forKey: Self.serverURLKey)
+        } else {
+            UserDefaults.standard.set(url.absoluteString, forKey: Self.serverURLKey)
+        }
         disconnectSSE()
-        phase = .needsServer
+        api = APIClient(baseURL: url)
+        if phase == .ready {
+            user = nil
+            projects = []
+            tasks = []
+            queue = []
+            store.wipe()
+            phase = .needsAuth
+        }
     }
 
     // MARK: Auth

@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var feedURL: URL?
     @State private var copiedFeed = false
     @State private var confirmLogout = false
+    @State private var showServerPicker = false
 
     var body: some View {
         NavigationStack {
@@ -94,9 +95,8 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Button("Change server") {
-                        dismiss()
-                        app.changeServer()
+                    Button("Self-hosted server…") {
+                        showServerPicker = true
                     }
                     Button("Log out", role: .destructive) {
                         confirmLogout = true
@@ -112,6 +112,10 @@ struct SettingsView: View {
             }
             .task {
                 feedURL = try? await app.api?.calendarFeedURL()
+            }
+            .sheet(isPresented: $showServerPicker) {
+                ServerSetupView()
+                    .presentationDetents([.medium])
             }
             .confirmationDialog(
                 app.pendingCount > 0

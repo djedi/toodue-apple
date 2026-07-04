@@ -7,8 +7,10 @@ layout — but with a fully native iOS look and feel.
 
 ## Features
 
-- **Point it at your server** — first-run screen takes any self-hosted TooDue URL
-  (plain-HTTP LAN servers work too)
+- **Hosted by default, self-hosted by choice** — signs into `app.toodue.com` out
+  of the box; self-hosters tap the small "Logging in on:" link on the login
+  screen (Bitwarden-style) to point the app at their own server, including
+  plain-HTTP LAN addresses
 - **Offline-first** — every change is applied locally and queued; the queue
   replays automatically when you're back online. Offline edits to the same task
   coalesce, and deleting a never-synced task cancels its queued creation entirely
@@ -40,8 +42,8 @@ make help        # everything else
 from `project.yml` and not checked in — edit `project.yml`, not the project.
 
 To run against a local backend: `make server` (starts the TooDue backend from a
-sibling `../toodue` checkout via Docker), then enter `http://localhost:8080` on
-the app's server screen.
+sibling `../toodue` checkout via Docker), then tap "Logging in on:" at the
+bottom of the login screen and enter `http://localhost:8080`.
 
 ## Architecture
 

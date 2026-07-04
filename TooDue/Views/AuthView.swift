@@ -9,6 +9,7 @@ struct AuthView: View {
     @State private var password = ""
     @State private var error: String?
     @State private var submitting = false
+    @State private var showServerPicker = false
 
     var body: some View {
         ScrollView {
@@ -63,18 +64,27 @@ struct AuthView: View {
                 }
                 .font(.subheadline)
 
+                // Bitwarden-style: the hosted service by default, self-hosting
+                // one deliberate tap away.
                 Button {
-                    app.changeServer()
+                    showServerPicker = true
                 } label: {
-                    Label(serverHost, systemImage: "server.rack")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "server.rack")
+                        Text("Logging in on: **\(serverHost)**")
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 }
                 .padding(.top, 16)
             }
             .padding(24)
         }
         .scrollDismissesKeyboard(.interactively)
+        .sheet(isPresented: $showServerPicker) {
+            ServerSetupView()
+                .presentationDetents([.medium])
+        }
     }
 
     private var formValid: Bool {
