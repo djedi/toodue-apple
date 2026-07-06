@@ -103,6 +103,15 @@ struct ModelTests {
         #expect(obj["parent_id"] is NSNull)
     }
 
+    @Test func placeholderProjectDefaultsToSky() {
+        let project = SyncLogic.placeholderProject(
+            tempID: -1,
+            draft: ProjectDraft(name: "New Project", color: nil, parentID: nil),
+            owner: nil
+        )
+        #expect(project.color == "sky")
+    }
+
     @Test func mutationQueueRoundTripsThroughJSON() throws {
         var patch = TaskPatch()
         patch.completed = true

@@ -96,22 +96,57 @@ struct ProjectEditView: View {
     let project: Project?
 
     @State private var name = ""
-    @State private var color = "slate"
+    @State private var color = "sky"
     @State private var parentID: Int64?
+
+    private let colorColumns = [
+        GridItem(.adaptive(minimum: 64), spacing: 12)
+    ]
 
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Project name", text: $name)
 
-                Picker("Color", selection: $color) {
-                    ForEach(ProjectColor.named, id: \.name) { entry in
-                        HStack {
-                            Circle().fill(entry.color).frame(width: 12, height: 12)
-                            Text(entry.name.capitalized)
+                Section("Color") {
+                    LazyVGrid(columns: colorColumns, spacing: 12) {
+                        ForEach(ProjectColor.named, id: \.name) { entry in
+                            Button {
+                                color = entry.name
+                            } label: {
+                                VStack(spacing: 6) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(entry.color)
+                                            .frame(width: 28, height: 28)
+                                        if color == entry.name {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 12, weight: .bold))
+                                                .foregroundStyle(.white)
+                                        }
+                                    }
+                                    Text(entry.name.capitalized)
+                                        .font(.caption2)
+                                        .foregroundStyle(.primary)
+                                        .lineLimit(1)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .fill(color == entry.name ? entry.color.opacity(0.14) : Color.clear)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(color == entry.name ? entry.color : Color.secondary.opacity(0.22), lineWidth: color == entry.name ? 2 : 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("\(entry.name.capitalized) project color")
+                            .accessibilityAddTraits(color == entry.name ? .isSelected : [])
                         }
-                        .tag(entry.name)
                     }
+                    .padding(.vertical, 4)
                 }
 
                 Picker("Parent project", selection: $parentID) {
