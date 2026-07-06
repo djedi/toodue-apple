@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Return a stable simulator UDID for a requested device name.
+
+Usage:
+  scripts/sim-device-id 'iPhone 17 Pro' [26.5]
+
+Prefers a booted matching device, then the requested OS, then the newest
+available runtime. Prints only the UDID so Make can use it directly.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import sys
+
+
+def os_key(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in re.findall(r"\d+", version))
+
+
+def runtime_version(runtime: str) -> str:
+    # com.apple.CoreSimulator.SimRuntime.iOS-26-5 -> 26.5
+    match = re.search(r"iOS-([0-9-]+)$", runtime)
+    return match.group(1).replace("-", ".") if match else "0"
+
+
+def main() -> int:
+    name = sys.argv[1] if len(sys.argv) > 1 else "iPhone 17 Pro"
+    requested_os = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
+
+    raw = subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "--json"])
+    data = json.loads(raw)
+
+    candidates: list[dict[str, str]] = []
+    for runtime, devices in data.get("devices", {}).items():
+        if ".iOS-" not in runtime:
+            continue
+        os_version = runtime_version(runtime)
+        for device in devices:
+            if device.get("name") == name and device.get("isAvailable", True):
+                candidates.append(
+                    {
+                        "udid": device["udid"],
+                        "state": device.get("state", ""),
+                        "os": os_version,
+                    }
+                )
+
+    if not candidates:
+        print(f"No available iOS simulator named {name!r}", file=sys.stderr)
+        return 1
+
+    if requested_os:
+        os_matches = [candidate for candidate in candidates if candidate["os"] == requested_os]
+        if not os_matches:
+            available = ", ".join(sorted({candidate["os"] for candidate in candidates}, key=os_key))
+            print(
+                f"No available {name!r} simulator with iOS {requested_os}. Available: {available}",
+                file=sys.stderr,
+            )
+            return 1
+        candidates = os_matches
+
+    booted = [candidate for candidate in candidates if candidate["state"] == "Booted"]
+    chosen = (booted or sorted(candidates, key=lambda candidate: os_key(candidate["os"]), reverse=True))[0]
+    print(chosen["udid"])
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
