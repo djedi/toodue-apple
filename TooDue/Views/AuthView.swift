@@ -15,9 +15,11 @@ struct AuthView: View {
         ScrollView {
             VStack(spacing: 24) {
                 VStack(spacing: 12) {
-                    Image(systemName: "checkmark.circle")
-                        .font(.system(size: 56, weight: .semibold))
-                        .foregroundStyle(Color.brand)
+                    Image("TooDueLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 72, height: 72)
+                        .accessibilityHidden(true)
                     Text("TooDue")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                 }
