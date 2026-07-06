@@ -4,12 +4,13 @@ import SwiftUI
 struct TooDueApp: App {
     @State private var app = AppState()
     @AppStorage("toodue-theme") private var theme = "system"
+    @AppStorage(AppAccentPalette.storageKey) private var accent = AppAccentPalette.defaultName
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(app)
-                .tint(Color.brand)
+                .tint(AppAccentPalette.color(for: accent))
                 .preferredColorScheme(colorScheme)
         }
     }

@@ -3,6 +3,7 @@ import SwiftUI
 struct ProjectDetailView: View {
     @Environment(AppState.self) private var app
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(AppAccentPalette.storageKey) private var accent = AppAccentPalette.defaultName
     let projectID: Int64
 
     @State private var selected: TodoTask?
@@ -51,7 +52,7 @@ struct ProjectDetailView: View {
 
             HStack(spacing: 12) {
                 Image(systemName: "plus.circle")
-                    .foregroundStyle(Color.brand)
+                    .foregroundStyle(accentColor)
                 TextField("Add a task", text: $newTaskName)
                     .focused($addFocused)
                     .onSubmit(addTask)
@@ -78,6 +79,10 @@ struct ProjectDetailView: View {
         .onChange(of: project == nil) { _, gone in
             if gone { dismiss() } // project deleted (possibly remotely)
         }
+    }
+
+    private var accentColor: Color {
+        AppAccentPalette.color(for: accent)
     }
 
     private func addTask() {

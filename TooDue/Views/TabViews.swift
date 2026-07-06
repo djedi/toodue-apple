@@ -149,6 +149,7 @@ struct ProjectsView: View {
 }
 
 struct ProjectRow: View {
+    @AppStorage(AppAccentPalette.storageKey) private var accent = AppAccentPalette.defaultName
     let project: Project
     let depth: Int
 
@@ -156,7 +157,7 @@ struct ProjectRow: View {
         HStack(spacing: 10) {
             Image(systemName: project.inbox ? "tray" : "number")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(project.inbox ? Color.brand : ProjectColor.color(for: project.color))
+                .foregroundStyle(project.inbox ? accentColor : ProjectColor.color(for: project.color))
                 .frame(width: 22)
             Text(project.name)
                 .font(.subheadline)
@@ -175,6 +176,9 @@ struct ProjectRow: View {
         .padding(.leading, CGFloat(depth) * 20)
         .padding(.vertical, 2)
         .opacity(project.id < 0 ? 0.75 : 1)
+    }
+    private var accentColor: Color {
+        AppAccentPalette.color(for: accent)
     }
 }
 
