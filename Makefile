@@ -11,7 +11,9 @@ SHELL := /bin/bash
 PROJECT      := TooDue.xcodeproj
 SCHEME       := TooDue
 SIM_NAME     ?= iPhone 17 Pro
-DESTINATION  := platform=iOS Simulator,name=$(SIM_NAME)
+SIM_OS       ?=
+DEVICE_ID    ?= $(shell ./scripts/sim-device-id '$(SIM_NAME)' '$(SIM_OS)')
+DESTINATION  := id=$(DEVICE_ID)
 DERIVED_DATA := build
 BUNDLE_ID    := com.toodue.ios
 APP          := $(DERIVED_DATA)/Build/Products/Debug-iphonesimulator/TooDue.app
@@ -65,10 +67,11 @@ test: $(PROJECT) ## Run unit tests in the simulator
 
 .PHONY: run
 run: build ## Build, install, and launch in the simulator
-	@xcrun simctl boot "$(SIM_NAME)" 2>/dev/null || true
+	@xcrun simctl boot "$(DEVICE_ID)" 2>/dev/null || true
+	@xcrun simctl bootstatus "$(DEVICE_ID)" -b
 	open -a Simulator
-	xcrun simctl install "$(SIM_NAME)" "$(APP)"
-	xcrun simctl launch "$(SIM_NAME)" $(BUNDLE_ID)
+	xcrun simctl install "$(DEVICE_ID)" "$(APP)"
+	xcrun simctl launch "$(DEVICE_ID)" $(BUNDLE_ID)
 
 .PHONY: open
 open: $(PROJECT) ## Open the project in Xcode
@@ -87,15 +90,15 @@ clean: ## Delete build products and the generated project
 
 .PHONY: nuke
 nuke: clean ## Clean + erase the simulator's copy of the app
-	@xcrun simctl uninstall "$(SIM_NAME)" $(BUNDLE_ID) 2>/dev/null || true
+	@xcrun simctl uninstall "$(DEVICE_ID)" $(BUNDLE_ID) 2>/dev/null || true
 
 .PHONY: sims
-sims: ## List available iPhone simulators (set SIM_NAME=… to pick one)
+sims: ## List available iPhone simulators (set SIM_NAME=… SIM_OS=… to pick one)
 	@xcrun simctl list devices available | grep -i iphone
 
 .PHONY: help
 help: ## Show this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nTooDue iOS\n\nUsage:\n  make \033[36m<target>\033[0m [SIM_NAME=\"iPhone 17\"]\n"} \
+	@awk 'BEGIN {FS = ":.*##"; printf "\nTooDue iOS\n\nUsage:\n  make \033[36m<target>\033[0m [SIM_NAME=\"iPhone 17 Pro\"] [SIM_OS=\"26.5\"]\n"} \
 		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } \
 		/^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 	@echo ""

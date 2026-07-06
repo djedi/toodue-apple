@@ -61,7 +61,7 @@ enum SyncLogic {
         Project(
             id: tempID,
             name: draft.name,
-            color: draft.color ?? "slate",
+            color: draft.color ?? "sky",
             parentID: draft.parentID,
             ownerID: owner?.id ?? 0,
             isInbox: 0,

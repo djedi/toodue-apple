@@ -5,6 +5,7 @@ struct MainTabView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var quickAdd = false
     @State private var showSettings = false
+    @AppStorage(AppAccentPalette.storageKey) private var accent = AppAccentPalette.defaultName
 
     var body: some View {
         TabView {
@@ -64,12 +65,15 @@ struct MainTabView: View {
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 56, height: 56)
-                .background(Color.brand, in: Circle())
-                .shadow(color: Color.brand.opacity(0.3), radius: 12, y: 4)
+                .background(accentColor, in: Circle())
+                .shadow(color: accentColor.opacity(0.3), radius: 12, y: 4)
         }
         .padding(.trailing, 20)
         .padding(.bottom, 64)
         .accessibilityLabel("Add task")
+    }
+    private var accentColor: Color {
+        AppAccentPalette.color(for: accent)
     }
 }
 

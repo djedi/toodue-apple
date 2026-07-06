@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(AppState.self) private var app
     @Environment(\.dismiss) private var dismiss
     @AppStorage("toodue-theme") private var theme = "system"
+    @AppStorage(AppAccentPalette.storageKey) private var accent = AppAccentPalette.defaultName
 
     @State private var feedURL: URL?
     @State private var copiedFeed = false
@@ -20,7 +21,7 @@ struct SettingsView: View {
                                 .font(.headline)
                                 .foregroundStyle(.white)
                                 .frame(width: 44, height: 44)
-                                .background(Color.brand, in: Circle())
+                                .background(accentColor, in: Circle())
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(user.name)
                                     .font(.headline)
@@ -40,6 +41,23 @@ struct SettingsView: View {
                         Text("Dark").tag("dark")
                     }
                     .pickerStyle(.segmented)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Color scheme")
+                                .font(.subheadline.weight(.semibold))
+                            Text("Pick the main accent color for buttons, links, and highlights")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8)], spacing: 8) {
+                            ForEach(AppAccentPalette.options) { option in
+                                accentButton(option)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 6)
                 }
 
                 Section("Sync") {
@@ -132,6 +150,38 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var accentColor: Color {
+        AppAccentPalette.color(for: accent)
+    }
+
+    private func accentButton(_ option: AppAccent) -> some View {
+        let selected = AppAccentPalette.normalized(accent) == option.name
+        return Button {
+            accent = option.name
+        } label: {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(option.color)
+                    .frame(width: 13, height: 13)
+                    .overlay(Circle().stroke(.white.opacity(0.55), lineWidth: 1))
+                Text(option.label)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(selected ? .white : .primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .frame(maxWidth: .infinity)
+            .background(selected ? option.color.opacity(0.95) : Color.secondary.opacity(0.12), in: Capsule())
+            .overlay(
+                Capsule().stroke(selected ? option.color : Color.secondary.opacity(0.25), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(option.label) color scheme")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func initials(_ name: String) -> String {

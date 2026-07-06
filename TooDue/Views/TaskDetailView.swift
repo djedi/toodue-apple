@@ -5,6 +5,7 @@ import SwiftUI
 struct TaskDetailView: View {
     @Environment(AppState.self) private var app
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(AppAccentPalette.storageKey) private var accent = AppAccentPalette.defaultName
     let taskID: Int64
 
     @State private var name = ""
@@ -130,7 +131,7 @@ struct TaskDetailView: View {
             }
             HStack(spacing: 10) {
                 Image(systemName: "plus.circle")
-                    .foregroundStyle(Color.brand)
+                    .foregroundStyle(accentColor)
                 TextField("Add a sub-task", text: $newSubtask)
                     .onSubmit {
                         let trimmed = newSubtask.trimmingCharacters(in: .whitespaces)
@@ -185,7 +186,7 @@ struct TaskDetailView: View {
                 } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(Color.brand)
+                        .foregroundStyle(accentColor)
                 }
                 .buttonStyle(.plain)
                 .disabled(newComment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -220,6 +221,10 @@ struct TaskDetailView: View {
         if let detail = try? await api.taskDetail(id: taskID) {
             comments = detail.comments
         }
+    }
+
+    private var accentColor: Color {
+        AppAccentPalette.color(for: accent)
     }
 
     /// Diff the edited fields against the cached task and enqueue one patch.

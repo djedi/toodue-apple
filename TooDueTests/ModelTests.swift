@@ -103,6 +103,21 @@ struct ModelTests {
         #expect(obj["parent_id"] is NSNull)
     }
 
+    @Test func accentPaletteDefaultsToSky() {
+        #expect(AppAccentPalette.defaultName == "sky")
+        #expect(AppAccentPalette.normalized("bogus") == "sky")
+        #expect(AppAccentPalette.options.map(\.name) == ["sky", "coral", "emerald", "violet", "amber", "rose"])
+    }
+
+    @Test func placeholderProjectDefaultsToSky() {
+        let project = SyncLogic.placeholderProject(
+            tempID: -1,
+            draft: ProjectDraft(name: "New Project", color: nil, parentID: nil),
+            owner: nil
+        )
+        #expect(project.color == "sky")
+    }
+
     @Test func mutationQueueRoundTripsThroughJSON() throws {
         var patch = TaskPatch()
         patch.completed = true
