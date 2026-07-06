@@ -9,7 +9,7 @@ struct TooDueApp: App {
         WindowGroup {
             RootView()
                 .environment(app)
-                .tint(.brand)
+                .tint(Color.brand)
                 .preferredColorScheme(colorScheme)
         }
     }
